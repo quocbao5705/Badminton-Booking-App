@@ -1,6 +1,7 @@
 package com.example.badmintonbookingapp.ui.theme
 
 import android.app.Activity
+import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -60,7 +61,11 @@ fun BadmintonBookingAppTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as? Activity)?.window ?: return@SideEffect
-            window.statusBarColor = colorScheme.background.toArgb()
+            // From Android 15 (API 35) apps are edge-to-edge and statusBarColor is ignored
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+                @Suppress("DEPRECATION")
+                window.statusBarColor = colorScheme.background.toArgb()
+            }
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }
