@@ -76,7 +76,7 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
-                        text = "Chào Minh 👋",
+                        text = "Chào ${BadmiData.sampleUser.name} 👋",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = BadmiTextPrimary
@@ -89,6 +89,7 @@ fun HomeScreen(
                 }
             }
 
+            val unreadCount = BadmiData.getUnreadNotificationCount()
             IconButton(
                 onClick = onNavigateToNotifications,
                 modifier = Modifier
@@ -96,13 +97,21 @@ fun HomeScreen(
                     .background(BadmiSurface, CircleShape)
                     .clip(CircleShape)
             ) {
-                BadgedBox(
-                    badge = {
-                        Badge(containerColor = BadmiDanger) {
-                            Text("2", color = Color.White, fontSize = 10.sp)
+                if (unreadCount > 0) {
+                    BadgedBox(
+                        badge = {
+                            Badge(containerColor = BadmiDanger) {
+                                Text("$unreadCount", color = Color.White, fontSize = 10.sp)
+                            }
                         }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Notifications,
+                            contentDescription = "Thông báo",
+                            tint = BadmiTextPrimary
+                        )
                     }
-                ) {
+                } else {
                     Icon(
                         imageVector = Icons.Outlined.Notifications,
                         contentDescription = "Thông báo",
@@ -278,14 +287,29 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Court Cards
+        // Court Cards Filtered
+        val selectedCategory = categories.getOrElse(selectedCategoryIndex) { "Tất cả" }
+        val filteredCourts = BadmiData.sampleCourts.filter { court ->
+            val matchesSearch = searchQuery.isBlank() ||
+                court.name.contains(searchQuery, ignoreCase = true) ||
+                court.address.contains(searchQuery, ignoreCase = true)
+            val matchesCategory = when (selectedCategory) {
+                "Sân thảm BWF" -> court.surfaceType.contains("BWF", ignoreCase = true)
+                "Gần bạn" -> court.distanceKm <= 2.5
+                "Giá tốt" -> court.pricePerHour <= 115000
+                "Mở 24/7" -> court.openingHours.contains("23") || court.openingHours.contains("24")
+                else -> true
+            }
+            matchesSearch && matchesCategory
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            BadmiData.sampleCourts.take(2).forEach { court ->
+            filteredCourts.take(3).forEach { court ->
                 CourtSummaryCard(
                     court = court,
                     onClick = { onNavigateToCourtDetail(court.id) },

@@ -44,14 +44,23 @@ fun ShopScreen(
                 subtitle = "Sẵn sàng cho trận hay",
                 showBack = false,
                 actions = {
+                    val cartCount = BadmiData.getCartItemCount()
                     IconButton(onClick = onNavigateToCart) {
-                        BadgedBox(
-                            badge = {
-                                Badge(containerColor = BadmiPrimary) {
-                                    Text("2", color = Color.White)
+                        if (cartCount > 0) {
+                            BadgedBox(
+                                badge = {
+                                    Badge(containerColor = BadmiPrimary) {
+                                        Text("$cartCount", color = Color.White)
+                                    }
                                 }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.ShoppingCart,
+                                    contentDescription = "Giỏ hàng",
+                                    tint = BadmiTextPrimary
+                                )
                             }
-                        ) {
+                        } else {
                             Icon(
                                 imageVector = Icons.Outlined.ShoppingCart,
                                 contentDescription = "Giỏ hàng",
@@ -88,6 +97,7 @@ fun ShopScreen(
             }
 
             // Products Grid / List
+            val displayedProducts = BadmiData.getProductsByCategory(selectedCategory)
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -95,7 +105,7 @@ fun ShopScreen(
                     .padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                BadmiData.sampleProducts.forEach { product ->
+                displayedProducts.forEach { product ->
                     ProductSummaryCard(
                         product = product,
                         onClick = { onNavigateToProductDetail(product.id) }
@@ -213,12 +223,18 @@ fun ProductDetailScreen(
                 ) {
                     BadmiOutlinedButton(
                         text = "Thêm vào giỏ",
-                        onClick = onAddToCart,
+                        onClick = {
+                            BadmiData.addToCart(product, quantity = 1, selectedWeight = selectedGrip)
+                            onAddToCart()
+                        },
                         modifier = Modifier.weight(1f)
                     )
                     BadmiButton(
                         text = "Mua ngay",
-                        onClick = onAddToCart,
+                        onClick = {
+                            BadmiData.addToCart(product, quantity = 1, selectedWeight = selectedGrip)
+                            onAddToCart()
+                        },
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -315,11 +331,11 @@ fun CartScreen(
     onBackClick: () -> Unit,
     onCheckout: () -> Unit
 ) {
-    var cartItems by remember { mutableStateOf(BadmiData.sampleCart) }
+    val cartItems = BadmiData.sampleCart
     val subtotal = cartItems.sumOf { it.product.price * it.quantity }
-    val shipping = 30000
-    val discount = 20000
-    val total = subtotal + shipping - discount
+    val shipping = if (cartItems.isEmpty()) 0 else 30000
+    val discount = if (cartItems.isEmpty()) 0 else 20000
+    val total = (subtotal + shipping - discount).coerceAtLeast(0)
 
     Scaffold(
         topBar = {
@@ -352,7 +368,17 @@ fun CartScreen(
                     Spacer(modifier = Modifier.height(12.dp))
                     BadmiButton(
                         text = "Tiến hành thanh toán (${formatCurrency(total)})",
-                        onClick = onCheckout
+                        onClick = {
+                            if (cartItems.isNotEmpty()) {
+                                BadmiData.addNotification(
+                                    title = "Đơn hàng đã được xác nhận",
+                                    message = "Cảm ơn bạn đã đặt mua thiết bị tại BadmiStore. Đơn hàng đang được đóng gói.",
+                                    category = "Khuyến mãi"
+                                )
+                                BadmiData.clearCart()
+                                onCheckout()
+                            }
+                        }
                     )
                 }
             }
@@ -367,7 +393,7 @@ fun CartScreen(
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            cartItems.forEachIndexed { index, item ->
+            cartItems.forEach { item ->
                 BadmiCard {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -407,11 +433,7 @@ fun CartScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             IconButton(
                                 onClick = {
-                                    if (item.quantity > 1) {
-                                        cartItems = cartItems.toMutableList().also {
-                                            it[index] = item.copy(quantity = item.quantity - 1)
-                                        }
-                                    }
+                                    BadmiData.updateCartQuantity(item.product.id, item.quantity - 1)
                                 },
                                 modifier = Modifier.size(28.dp)
                             ) {
@@ -424,9 +446,7 @@ fun CartScreen(
                             )
                             IconButton(
                                 onClick = {
-                                    cartItems = cartItems.toMutableList().also {
-                                        it[index] = item.copy(quantity = item.quantity + 1)
-                                    }
+                                    BadmiData.updateCartQuantity(item.product.id, item.quantity + 1)
                                 },
                                 modifier = Modifier.size(28.dp)
                             ) {

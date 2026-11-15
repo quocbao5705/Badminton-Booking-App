@@ -426,13 +426,15 @@ fun CourtDetailScreen(
                     }
 
                     IconButton(
-                        onClick = { isFavorite = !isFavorite },
+                        onClick = {
+                            isFavorite = BadmiData.toggleFavorite(court.id)
+                        },
                         modifier = Modifier.background(Color.Black.copy(alpha = 0.35f), CircleShape)
                     ) {
                         Icon(
-                            imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                            imageVector = if (court.isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                             contentDescription = "Favorite",
-                            tint = if (isFavorite) BadmiDanger else Color.White
+                            tint = if (court.isFavorite) BadmiDanger else Color.White
                         )
                     }
                 }

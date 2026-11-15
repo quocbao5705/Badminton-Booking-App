@@ -30,6 +30,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.ui.draw.clip
 import androidx.navigation.navArgument
+import com.example.badmintonbookingapp.data.BadmiData
 import com.example.badmintonbookingapp.ui.components.*
 import com.example.badmintonbookingapp.ui.screens.*
 import com.example.badmintonbookingapp.ui.theme.*
@@ -207,6 +208,7 @@ fun BadmiAppScaffold() {
                     bookingId = cancelTargetBookingId,
                     onDismiss = { showCancelDialog = false },
                     onConfirmCancel = {
+                        BadmiData.cancelBooking(cancelTargetBookingId)
                         showCancelDialog = false
                         navController.navigate(Screen.Bookings.route)
                     }
@@ -360,7 +362,19 @@ fun BadmiNavHost(
             PaymentQrScreen(
                 amount = amount,
                 onBackClick = { navController.popBackStack() },
-                onPaymentSuccess = { navController.navigate(Screen.BookingSuccess.route) }
+                onPaymentSuccess = {
+                    BadmiData.addBooking(
+                        courtId = "court_1",
+                        courtName = "BadmiSpot Club Bình Thạnh",
+                        courtNumber = "Sân 02",
+                        address = "182/25 Bạch Đằng, P. 24, Bình Thạnh",
+                        date = "Thứ Tư, 22/10/2026",
+                        timeSlot = "18:00 - 20:00 (2 tiếng)",
+                        durationHours = 2,
+                        totalPrice = amount
+                    )
+                    navController.navigate(Screen.BookingSuccess.route)
+                }
             )
         }
 

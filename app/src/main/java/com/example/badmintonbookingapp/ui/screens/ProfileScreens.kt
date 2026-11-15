@@ -228,11 +228,12 @@ fun EditProfileScreen(
     onBackClick: () -> Unit,
     onSaveSuccess: () -> Unit
 ) {
-    var name by remember { mutableStateOf("Nguyễn Minh") }
-    var phone by remember { mutableStateOf("0908 190 228") }
-    var email by remember { mutableStateOf("minh.badmi@gmail.com") }
-    var handedness by remember { mutableStateOf("Tay phải") }
-    var style by remember { mutableStateOf("Tấn công") }
+    val currentUser = BadmiData.sampleUser
+    var name by remember { mutableStateOf(currentUser.name) }
+    var phone by remember { mutableStateOf(currentUser.phone) }
+    var email by remember { mutableStateOf(currentUser.email) }
+    var handedness by remember { mutableStateOf(currentUser.handedness) }
+    var style by remember { mutableStateOf(currentUser.playStyle) }
 
     Scaffold(
         topBar = {
@@ -248,7 +249,19 @@ fun EditProfileScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
-                    BadmiButton(text = "Lưu thay đổi", onClick = onSaveSuccess)
+                    BadmiButton(
+                        text = "Lưu thay đổi",
+                        onClick = {
+                            BadmiData.updateUserProfile(
+                                name = name,
+                                phone = phone,
+                                email = email,
+                                playStyle = style,
+                                handedness = handedness
+                            )
+                            onSaveSuccess()
+                        }
+                    )
                 }
             }
         }
@@ -380,11 +393,13 @@ fun VouchersScreen(onBackClick: () -> Unit) {
                             )
                         }
                         Button(
-                            onClick = {},
+                            onClick = { BadmiData.selectVoucher(voucher.code) },
                             shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = BadmiPrimary)
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (voucher.isSelected) BadmiMint else BadmiPrimary
+                            )
                         ) {
-                            Text("Dùng ngay", fontSize = 12.sp)
+                            Text(if (voucher.isSelected) "Đã chọn" else "Dùng ngay", fontSize = 12.sp)
                         }
                     }
                 }
@@ -400,7 +415,12 @@ fun NotificationsScreen(onBackClick: () -> Unit) {
             BadmiTopBar(
                 title = "Thông báo",
                 subtitle = "Có gì mới hôm nay?",
-                onBackClick = onBackClick
+                onBackClick = onBackClick,
+                actions = {
+                    TextButton(onClick = { BadmiData.markAllNotificationsAsRead() }) {
+                        Text("Đánh dấu đã đọc", fontSize = 12.sp, color = BadmiPrimary)
+                    }
+                }
             )
         }
     ) { innerPadding ->
@@ -414,7 +434,7 @@ fun NotificationsScreen(onBackClick: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             BadmiData.sampleNotifications.forEach { notif ->
-                BadmiCard {
+                BadmiCard(onClick = { BadmiData.markNotificationAsRead(notif.id) }) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween

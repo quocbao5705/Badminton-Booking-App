@@ -146,7 +146,10 @@ fun MatchDetailScreen(
                     }
 
                     Button(
-                        onClick = onJoinClick,
+                        onClick = {
+                            BadmiData.joinMatch(match.id)
+                            onJoinClick()
+                        },
                         shape = RoundedCornerShape(25.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = BadmiPrimary,
@@ -358,7 +361,21 @@ fun CreateMatchScreen(
                 Column(modifier = Modifier.padding(20.dp)) {
                     BadmiButton(
                         text = "Đăng tạo trận ngay 🏸",
-                        onClick = onSubmit
+                        onClick = {
+                            BadmiData.createMatch(
+                                title = matchTitle.ifBlank { "Trận giao lưu cầu lông" },
+                                courtName = "BadmiSpot Club Bình Thạnh",
+                                address = "182/25 Bạch Đằng, Bình Thạnh",
+                                date = "Hôm nay, 22/10",
+                                time = "18:00 - 20:00",
+                                format = selectedFormat,
+                                skillLevel = selectedLevel,
+                                maxPlayers = maxPlayers,
+                                feePerPlayer = feePerPlayer.toIntOrNull() ?: 45000,
+                                description = note
+                            )
+                            onSubmit()
+                        }
                     )
                 }
             }
@@ -633,7 +650,10 @@ fun MatchRatingScreen(
                 Column(modifier = Modifier.padding(20.dp)) {
                     BadmiButton(
                         text = "Gửi đánh giá",
-                        onClick = onSubmitRating
+                        onClick = {
+                            BadmiData.rateMatch(matchId, rating.toDouble(), reviewText)
+                            onSubmitRating()
+                        }
                     )
                 }
             }
